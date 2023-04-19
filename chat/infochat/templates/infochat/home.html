@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="content-wrapper">
+    <section class="chat-container">
+        <div class="message-list">
+            <div class="message user-message">
+                <p>2+2?</p>
+            </div>
+            <div class="message ai-message">
+                <p>4</p>
+            </div>
+        </div>
+        <form method="post" class="prompt-form" id='prompt-form' onsubmit="return false;">
+            {% csrf_token %}
+            <textarea name="prompt-box" id="prompt-box"></textarea>
+            <button type='submit' id='submit-button'>Send</button>
+        </form>
+        <script type="text/javascript">
+            $(document).on('submit', '#prompt-form',function(e){
+                e.preventDefault();
+                $.ajax({
+                    type:'POST',
+                    url:'{% url "prompt" %}',
+                    data:{
+                        prompt:$('#prompt-box').val(),
+                        csrfmiddlewaretoken:$('input[name=csrfmiddlewaretoken]').val(),
+                        action: 'prompt'
+                    },
+                    beforeSend:function(){
+                        $(".message-list").append(
+                            '<div class="message user-message">' +
+                                "<p>" + $('#prompt-box').val() + '</p>' +
+                            '</div>');
+                        $('#submit-button').prop('disabled', true);
+                        document.getElementById("prompt-form").reset();
+                    },
+                    success:function(json){
+                        $(".message-list").append(
+                            '<div class="message ai-message">' +
+                                "<p>" + json.result + "</p>"+
+                            '</div>');
+                        $('#submit-button').prop('disabled', false);
+                    },
+                    error : function(xhr,errmsg,err) {
+                        console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+                        $('#submit-button').prop('disabled', false);
+                    }
+                });
+            });
+        </script>
+    </section>
+</div>
+
+{% endblock content %}
+
+
+
+
+
